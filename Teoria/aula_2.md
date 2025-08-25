@@ -21,9 +21,9 @@
 ## 🔒 Exclusão Mútua
 - Garante que apenas **um processo** acesse a região crítica por vez.
 - Propriedades:
-  1. Mutual exclusion → apenas 1 processo no recurso.
-  2. Progress → se recurso livre, algum processo entra.
-  3. Bounded waiting → nenhum processo espera para sempre.
+  - Mutual exclusion → apenas 1 processo no recurso.
+  - Progress → se recurso livre, algum processo entra.
+  - Bounded waiting → nenhum processo espera para sempre.
 - Implementações:
   - Centralizada (coordenador).
   - Distribuída (Ricart-Agrawala, token ring).
