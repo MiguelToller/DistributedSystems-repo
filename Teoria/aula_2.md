@@ -41,17 +41,6 @@
 
 ---
 
-## 📊 Diferenças Resumidas
-
-| Conceito          | O que é                                    | Foco principal          |
-|-------------------|--------------------------------------------|-------------------------|
-| Relógios Físicos  | Tempo real de hardware                     | Sincronização temporal  |
-| Relógios Lógicos  | Ordem de eventos (sem tempo real)          | Consistência causal     |
-| Exclusão Mútua    | Garantir 1 processo por vez no recurso     | Controle de acesso      |
-| Eleição           | Escolher líder/coordenador                 | Coordenação em falhas   |
-
----
-
 ## 🛫 Aplicações em Aeroportos
 
 ### Relógios Físicos
