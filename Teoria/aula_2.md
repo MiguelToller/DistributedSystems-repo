@@ -4,7 +4,7 @@
 - Baseados no tempo real do hardware (UTC).
 - Sofrem com **desvios de clock (clock drift)**:
   - Diferença no ritmo de contagem do tempo entre relógios de diferentes computadores.
-- Precisam de sincronização (ex.: **NTP**):
+- Precisam de sincronização (ex.: **Network Time Protocol**):
   - Protocolo de rede usado para sincronizar os relógios dos computadores com um relógio de referência confiável.
 - **Uso:** coordenação de eventos em tempo real, logs.
 
@@ -13,9 +13,8 @@
 ## ⏳ Relógios Lógicos
 - Não medem tempo real, mas ordenam eventos.
 - Garantem **ordem causal** entre processos.
-- **Exemplos:**
-  - **Relógio de Lamport** → ordem parcial:
-    - Um relógio lógico que fornece uma ordem parcial dos eventos em sistemas distribuídos, sem depender do tempo físico real.
+- **Relógio de Lamport** → ordem parcial:
+  - Um relógio lógico que fornece uma ordem parcial dos eventos em sistemas distribuídos, sem depender do tempo físico real.
 - **Uso:** consistência de mensagens, ordenação de eventos.
 
 ---
