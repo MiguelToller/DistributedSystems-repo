@@ -1,21 +1,106 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
+import javax.swing.SwingUtilities;
 
-/**
- *
- * @author laboratorio
- */
 public class Servidor extends javax.swing.JFrame {
+   
+    ServerSocket servidor;
+    Socket cliente;
+    private ArrayList<Pessoa> lista;
     
-    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Servidor.class.getName());
-
-    /**
-     * Creates new form Servidor
-     */
     public Servidor() {
         initComponents();
+        lista = new ArrayList<>();
+    }
+    
+    private void criaServerSocket() {
+        try {
+            int porta = Integer.parseInt(txtPorta.getText());
+            servidor = new ServerSocket(porta);
+            txaLogs.append("Server escutando na porta " + porta + "\n");
+        } catch (Exception ex) {
+            txaLogs.append("Erro ao criar ServerSocket: " + ex.getMessage() + "\n");
+        }
+    }
+    
+    private String gerarEmail(String nomePessoa) {
+        String[] vetorNome = nomePessoa.split(" ");
+        return vetorNome[0] + "." + vetorNome[vetorNome.length - 1] + "@ufn.edu.br";
+    }
+
+    private void aguardaClientes() {
+        while (true) {
+            try {
+                Boolean encontrado = false;
+                cliente = servidor.accept(); // Bloqueia até que o cliente se conecte
+
+                // Log de cliente conectado
+                String enderecoIP = cliente.getInetAddress().getHostAddress();
+                int portaCliente = cliente.getPort();
+                String nomePessoa = "";
+
+                // Leitura do nome do cliente
+                ObjectInputStream entrada = new ObjectInputStream(cliente.getInputStream());
+                nomePessoa = (String) entrada.readObject();
+
+                // Gerando email a partir do nome
+                String email = gerarEmail(nomePessoa);
+                nomePessoa = nomePessoa.toUpperCase();
+                email = email.toLowerCase();
+
+                // Criando objeto Pessoa
+                Pessoa p = new Pessoa(nomePessoa, email);
+
+                // Verificando se a pessoa ja esta na lista
+                for (Pessoa pessoa : lista) {
+                    if (pessoa.equals(p)) {
+                        encontrado = true;
+                        break;
+                    }
+                }
+
+                // Devolver o objeto
+                ObjectOutputStream saida = new ObjectOutputStream(cliente.getOutputStream());
+                saida.flush();
+                if (!encontrado) {
+                    lista.add(p);
+                    saida.writeObject(p);
+                } else {
+                    saida.writeObject(null);
+                }
+                
+                // Registrar no log quando cliente se conectar
+                String logCliente = "Cliente conectado: " + nomePessoa + " (IP: " + enderecoIP + ")";
+                SwingUtilities.invokeLater(() -> {
+                    txaLogs.append(logCliente + "\n");
+                });
+                
+                // Atualizando a interface grafica na thread principal
+                SwingUtilities.invokeLater(() -> atualizarListaClientes());
+
+                // Fechando recursos
+                saida.close();
+                entrada.close();
+                cliente.close();          
+
+            } catch (Exception ex) {
+                txaLogs.append("Erro ao aguardar cliente: " + ex.getMessage());
+            }
+        }
+    }
+    
+    private void atualizarListaClientes() {
+        // Cria um vetor de nomes para exibir na JList
+        String[] nomesClientes = new String[lista.size()];
+        for (int i = 0; i < lista.size(); i++) {
+            nomesClientes[i] = lista.get(i).getNome();
+        }
+
+        // Atualiza a JList na interface gráfica
+        jListClientes.setListData(nomesClientes);
     }
 
     /**
@@ -28,14 +113,33 @@ public class Servidor extends javax.swing.JFrame {
     private void initComponents() {
 
         jComboBox1 = new javax.swing.JComboBox<>();
-        jLabel1 = new javax.swing.JLabel();
-        jTextField1 = new javax.swing.JTextField();
+        lblPorta = new javax.swing.JLabel();
+        txtPorta = new javax.swing.JTextField();
+        btnIniciar = new javax.swing.JButton();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        txaLogs = new javax.swing.JTextArea();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        jListClientes = new javax.swing.JList<>();
 
         jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        jLabel1.setText("Porta");
+        lblPorta.setText("Porta");
+
+        btnIniciar.setText("Iniciar");
+        btnIniciar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnIniciarActionPerformed(evt);
+            }
+        });
+
+        txaLogs.setEditable(false);
+        txaLogs.setColumns(20);
+        txaLogs.setRows(5);
+        jScrollPane1.setViewportView(txaLogs);
+
+        jScrollPane2.setViewportView(jListClientes);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -43,52 +147,62 @@ public class Servidor extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel1)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(lblPorta)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtPorta, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(btnIniciar)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 286, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(296, Short.MAX_VALUE))
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(16, 16, 16)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1)
-                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(262, Short.MAX_VALUE))
+                    .addComponent(lblPorta)
+                    .addComponent(txtPorta, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnIniciar))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 243, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1))
+                .addContainerGap())
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void btnIniciarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnIniciarActionPerformed
+        criaServerSocket();
+        new Thread(() -> aguardaClientes()).start();
+        btnIniciar.setEnabled(false);
+    }//GEN-LAST:event_btnIniciarActionPerformed
+
     /**
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> new Servidor().setVisible(true));
+        java.awt.EventQueue.invokeLater(() -> {
+            Servidor s = new Servidor();
+            s.setTitle("Servidor");
+            s.setVisible(true);
+        });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnIniciar;
     private javax.swing.JComboBox<String> jComboBox1;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JTextField jTextField1;
+    private javax.swing.JList<String> jListClientes;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JLabel lblPorta;
+    private javax.swing.JTextArea txaLogs;
+    private javax.swing.JTextField txtPorta;
     // End of variables declaration//GEN-END:variables
 }
